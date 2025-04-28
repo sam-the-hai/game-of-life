@@ -1,3 +1,5 @@
+# tests/test_grid.py
+
 import pytest
 import numpy as np
 from game_of_life.core.grid import Grid
@@ -5,60 +7,101 @@ from game_of_life.core.grid import Grid
 def test_grid_initialization():
     """Test that the grid is initialized correctly."""
     grid = Grid(width=10, height=15)
-    
-    # Then dimensions should match
+
+    # Dimensions should match
     assert grid.width == 10
     assert grid.height == 15
-    assert grid.cells.shape == (10, 15)
-    
-    # Then all cells should be dead
+    assert grid.cells.shape == (15, 10)
+
+    # All cells should be dead initially
     assert np.all(grid.cells == 0)
-    
+
+
 def test_set_cell_state():
     """Test setting cell state."""
-    # Given a grid
-    grid = Grid(width=10, height=10)
+    grid = Grid(width=4, height=3)
     
-    # When we set a cell to alive
-    grid.set_cell(x=5, y=5, alive=True)
-    
-    # Then the cell should be alive
-    assert grid.is_alive(x=5, y=5) == True
-    
-    # When we set a cell to dead
-    grid.set_cell(x=5, y=5, alive=False)
-    
-    # Then the cell should be dead
-    assert grid.is_alive(x=5, y=5) == False
-    
-def test_count_neighbors():
-    """Test counting neighbors of a cell."""
-    # Given a grid with a pattern
-    grid = Grid(width=3, height=3)
-    # Create a pattern:
-    # 1 1 0
-    # 0 0 0
-    # 0 1 1
+    # Set a pattern:
+    # (x = column, y = row)
+    # Visualize the grid:
+    # 
+    #       x=0  x=1  x=2  x=3
+    #       +----+----+----+----+
+    # y=0   |  1 |  1 |  0 |  0 |
+    #       +----+----+----+----+
+    # y=1   |  0 |  0 |  0 |  0 |
+    #       +----+----+----+----+
+    # y=2   |  0 |  1 |  1 |  0 |
+    #       +----+----+----+----+
+
+    # (1 = alive, 0 = dead)
+
+    # Wrapping: when x or y overflows, it wraps around.
+    #
     grid.set_cell(x=0, y=0, alive=True)
-    grid.set_cell(x=0, y=1, alive=True)
-    grid.set_cell(x=2, y=1, alive=True)
+    grid.set_cell(x=1, y=0, alive=True)
+    grid.set_cell(x=1, y=2, alive=True)
     grid.set_cell(x=2, y=2, alive=True)
+
+    # Validate the pattern
+    expected = np.array([
+        [1, 1, 0, 0],
+        [0, 0, 0, 0],
+        [0, 1, 1, 0],
+    ], dtype=np.int8)
+
+    np.testing.assert_array_equal(grid.cells, expected)
+
+
+def test_count_neighbors():
+    """Test counting neighbors with wrapping.
+
+    Visualize the grid:
     
-    # When we count neighbors
-    # Then each cell should have correct neighbor count
-    # 1   0 1 1   0
-    #    - - - -
-    # 0 | 1 1 0 | 1
-    # 0 | 0 0 0 | 0
-    # 1 | 0 1 1 | 0
-    #    - - - -
-    # 0   1 1 0   1
-    assert grid.count_neighbors(x=0, y=0) == 3
+    x=0  x=1  x=2  x=3
+    +----+----+----+----+
+y=0 |  1 |  1 |  0 |  0 |
+    +----+----+----+----+
+y=1 |  0 |  0 |  0 |  0 |
+    +----+----+----+----+
+y=2 |  0 |  1 |  1 |  0 |
+    +----+----+----+----+
+
+    (1 = alive, 0 = dead)
+
+    Wrapping: when x or y overflows, it wraps around.
+    
+     x=3   x=0  x=1  x=2  x=3 x=0
+    +----+----+----+----+----+----+
+y=2 |  0 |  0 |  1 |  1 |  0 |  0 |
+    +----+----+----+----+----+----+
+y=0 |  0 |  1 |  1 |  0 |  0 |  1 |
+    +----+----+----+----+----+----+
+y=1 |  0 |  0 |  0 |  0 |  0 |  0 |
+    +----+----+----+----+----+----+
+y=2 |  0 |  0 |  1 |  1 |  0 |  0 |
+    +----+----+----+----+----+----+
+y=0 |  0 |  1 |  1 |  0 |  0 |  1 |
+    +----+----+----+----+----+----+
+    """
+    grid = Grid(width=4, height=3)
+    grid.set_cell(x=0, y=0, alive=True)
+    grid.set_cell(x=1, y=0, alive=True)
+    grid.set_cell(x=1, y=2, alive=True)
+    grid.set_cell(x=2, y=2, alive=True)
+
+    # Now checking each cell's live neighbors
+    assert grid.count_neighbors(x=0, y=0) == 2
+    assert grid.count_neighbors(x=1, y=0) == 3
+    assert grid.count_neighbors(x=2, y=0) == 3
+    assert grid.count_neighbors(x=3, y=0) == 2
+
     assert grid.count_neighbors(x=0, y=1) == 3
-    assert grid.count_neighbors(x=0, y=2) == 4
-    assert grid.count_neighbors(x=1, y=0) == 4
     assert grid.count_neighbors(x=1, y=1) == 4
-    assert grid.count_neighbors(x=1, y=2) == 4
-    assert grid.count_neighbors(x=2, y=0) == 4
     assert grid.count_neighbors(x=2, y=1) == 3
-    assert grid.count_neighbors(x=2, y=2) == 3
+    assert grid.count_neighbors(x=3, y=1) == 2
+
+    assert grid.count_neighbors(x=0, y=2) == 3
+    assert grid.count_neighbors(x=1, y=2) == 3
+    assert grid.count_neighbors(x=2, y=2) == 2
+    assert grid.count_neighbors(x=3, y=2) == 2
