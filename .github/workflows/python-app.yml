@@ -14,22 +14,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies (using pyproject.toml)
+      - name: Install Rye
         run: |
-          python -m pip install --upgrade pip
-          pip install .[dev]
+          curl -sSf https://rye-up.com/get | bash
+          echo "$HOME/.rye/shims" >> $GITHUB_PATH
+
+      - name: Sync dependencies from pyproject.toml
+        run: |
+          rye sync
 
       - name: Run tests with pytest
-        run: |
-          pytest
+        run: rye run pytest
 
       - name: Run Ruff
-        run: ruff check .
+        run: rye run ruff check .
 
       - name: Run Mypy
-        run: mypy .
+        run: rye run mypy .
