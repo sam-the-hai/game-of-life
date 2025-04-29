@@ -1,4 +1,3 @@
-# src/game_of_life/core/grid.py
 import numpy as np
 from typing import Tuple, List
 
