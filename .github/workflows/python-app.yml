@@ -18,10 +18,11 @@ jobs:
         run: |
           curl -sSf https://rye-up.com/get | bash
           echo "$HOME/.rye/shims" >> $GITHUB_PATH
+          echo "RYE_HOME=$HOME/.rye" >> $GITHUB_ENV
+          echo "PATH=$HOME/.rye/shims:$PATH" >> $GITHUB_ENV
 
       - name: Sync dependencies from pyproject.toml
-        run: |
-          rye sync
+        run: rye sync
 
       - name: Run tests with pytest
         run: rye run pytest
