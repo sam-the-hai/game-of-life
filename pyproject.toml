@@ -32,4 +32,4 @@ allow-direct-references = true
 packages = ["src/game_of_life"]
 
 [project.scripts]
-game-of-life = "game-of-life.main:main"
+game-of-life = "game_of_life.main:main"
